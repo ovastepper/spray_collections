@@ -12,10 +12,32 @@ const loadStoredItems = (key, fallback = []) => {
   }
 };
 
+const hydrateStoredProducts = (storedProducts, initialProducts) => {
+  if (!Array.isArray(storedProducts) || !storedProducts.length) {
+    return initialProducts;
+  }
+
+  const initialMap = new Map(initialProducts.map((item) => [item.id, item]));
+  const allIdsMatch = storedProducts.every((stored) => initialMap.has(stored.id));
+
+  if (!allIdsMatch) {
+    return initialProducts;
+  }
+
+  return storedProducts.map((stored) => {
+    const initial = initialMap.get(stored.id);
+    return {
+      ...initial,
+      ...stored,
+      image: initial.image,
+    };
+  });
+};
+
 export const CartProvider = ({ children }) => {
   const [cartItems, setCartItems] = useState(() => loadStoredItems('cartItems'));
   const [orderHistory, setOrderHistory] = useState(() => loadStoredItems('orderHistory'));
-  const [products, setProducts] = useState(() => loadStoredItems('products', initialProducts));
+  const [products, setProducts] = useState(() => hydrateStoredProducts(loadStoredItems('products', initialProducts), initialProducts));
   const [currentUser, setCurrentUser] = useState(() => loadStoredItems('currentUser', null));
   const [users, setUsers] = useState(() => loadStoredItems('users', []));
 

@@ -1,13 +1,13 @@
 ﻿import React from 'react';
 import { Carousel } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
-import { products as initialProducts } from '../data/productData';
+import { heroSlides } from '../data/productData';
 import { useCart } from '../context/CartContext';
 
 const HeroCarousel = () => {
   const navigate = useNavigate();
   const { products: contextProducts } = useCart();
-  const heroProducts = contextProducts.length ? contextProducts : initialProducts;
+  const heroProducts = contextProducts.length ? contextProducts : heroSlides;
 
   return (
     <section className="relative overflow-hidden bg-slate-950">
