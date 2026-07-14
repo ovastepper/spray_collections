@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FiChevronLeft } from 'react-icons/fi';
 import { useCart } from '../context/CartContext';
@@ -9,16 +9,25 @@ const Checkout = () => {
   const navigate = useNavigate();
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [authMode, setAuthMode] = useState('signin');
+  const [orderError, setOrderError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     if (!currentUser) {
       setAuthMode('signin');
       setIsAuthOpen(true);
       return;
     }
 
-    submitOrder({ items: cartItems, total: totalPrice, customer: `${currentUser.firstName} ${currentUser.lastName}` });
-    navigate('/dashboard');
+    setIsSubmitting(true);
+    setOrderError('');
+    const result = await submitOrder({ items: cartItems, total: totalPrice, customer: `${currentUser.firstName} ${currentUser.lastName}`.trim() });
+    setIsSubmitting(false);
+    if (result.success) {
+      navigate('/dashboard');
+    } else {
+      setOrderError(result.message);
+    }
   };
 
   const handleAuthSuccess = () => {
@@ -120,10 +129,12 @@ const Checkout = () => {
               )}
               <button
                 onClick={handleConfirm}
-                className="w-full bg-black text-white py-3 uppercase tracking-[0.2em] text-xs font-bold rounded-sm hover:bg-amber-400 transition"
+                disabled={isSubmitting}
+                className="w-full bg-black text-white py-3 uppercase tracking-[0.2em] text-xs font-bold rounded-sm hover:bg-amber-400 transition disabled:cursor-wait disabled:opacity-60"
               >
-                Confirm Order
+                {isSubmitting ? 'Saving Order…' : 'Confirm Order'}
               </button>
+              {orderError && <p className="text-sm text-red-600">{orderError}</p>}
             </div>
           </aside>
         </div>

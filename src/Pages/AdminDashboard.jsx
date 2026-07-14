@@ -4,38 +4,38 @@ import { useCart } from '../context/CartContext';
 import { categoryFolders } from '../data/productData';
 
 const AdminDashboard = () => {
+  const [email, setEmail] = useState('antwid809@gmail.com');
   const [password, setPassword] = useState('');
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authError, setAuthError] = useState('');
   const [activeTab, setActiveTab] = useState('Dashboard');
-  const { products, updateProduct, addProduct, deleteProductById, orderHistory, clearOrderHistory, updateOrderStatus } = useCart();
+  const {
+    products,
+    updateProduct,
+    deleteProductById,
+    orderHistory,
+    clearOrderHistory,
+    updateOrderStatus,
+    currentUser,
+    login,
+    logout,
+    isAdmin,
+    authReady,
+    companyInfo,
+    setCompanyInfo,
+    updateCompanyInfo,
+    backendError,
+    seedStatus
+  } = useCart();
   const [searchText, setSearchText] = useState('');
   const [editBuffer, setEditBuffer] = useState({});
-  const [newItem, setNewItem] = useState({ name: '', price: '', category: categoryFolders[0].name, description: '', image: null, preview: null });
-  const [companyInfo, setCompanyInfo] = useState(() => {
-    const stored = localStorage.getItem('companyInfo');
-    return stored ? JSON.parse(stored) : {
-      name: 'Cianelle_Luxe Fragrances',
-      phone: '0247283407',
-      email: 'info@cianelle.com',
-      address: 'Kwadaso-Kumasi',
-      days: 'Monday – Saturday',
-      times: '8:00am GMT – 6:00pm'
-    };
-  });
-  const [orders, setOrders] = useState(orderHistory);
   const [companySaveMessage, setCompanySaveMessage] = useState('');
   const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const orders = orderHistory;
 
   const filteredProducts = useMemo(() => {
     const lower = searchText.toLowerCase();
     return products.filter((item) => item.name.toLowerCase().includes(lower) || item.category.toLowerCase().includes(lower));
   }, [products, searchText]);
-
-  // Update orders when orderHistory changes
-  useEffect(() => {
-    setOrders(orderHistory);
-  }, [orderHistory]);
 
   const dailyOrders = useMemo(() => {
     const today = new Date().toLocaleDateString('en-GB');
@@ -44,19 +44,20 @@ const AdminDashboard = () => {
   const weeklyOrders = useMemo(() => orders.length, [orders]);
   const totalOrders = useMemo(() => orders.length, [orders]);
 
-  const handleLogin = () => {
-    if (password === 'NanaKofi12345@') {
-      setIsAuthenticated(true);
-      setAuthError('');
-    } else {
-      setAuthError('Incorrect password. Access denied.');
-    }
+  const handleLogin = async () => {
+    setAuthError('');
+    const result = await login({ email, password });
+    if (!result.success) setAuthError(result.message);
   };
 
-  const saveCompanyInfo = () => {
-    localStorage.setItem('companyInfo', JSON.stringify(companyInfo));
-    setCompanySaveMessage('Company information saved successfully!');
-    setTimeout(() => setCompanySaveMessage(''), 3000);
+  const saveCompanyInfo = async () => {
+    try {
+      await updateCompanyInfo(companyInfo);
+      setCompanySaveMessage('Company information saved successfully!');
+      setTimeout(() => setCompanySaveMessage(''), 3000);
+    } catch {
+      setCompanySaveMessage('Unable to save company information.');
+    }
   };
 
   const toggleOrderStatus = (orderId) => {
@@ -65,9 +66,8 @@ const AdminDashboard = () => {
     updateOrderStatus(orderId, newStatus);
   };
 
-  const clearAllOrders = () => {
-    setOrders([]);
-    clearOrderHistory();
+  const clearAllOrders = async () => {
+    await clearOrderHistory();
     setShowClearConfirm(false);
   };
 
@@ -81,11 +81,15 @@ const AdminDashboard = () => {
     }));
   };
 
-  const saveProductChanges = (id) => {
+  const saveProductChanges = async (id) => {
     const pending = editBuffer[id];
     if (!pending) return;
-    updateProduct(id, {
+    const selectedCategory = pending.category
+      ? categoryFolders.find((category) => category.name === pending.category)
+      : null;
+    await updateProduct(id, {
       ...pending,
+      ...(selectedCategory ? { slug: selectedCategory.slug } : {}),
       price: parseFloat(pending.price) || 0
     });
     setEditBuffer((prev) => {
@@ -95,57 +99,44 @@ const AdminDashboard = () => {
     });
   };
 
-  const toggleAvailability = (id) => {
+  const toggleAvailability = async (id) => {
     const product = products.find((item) => item.id === id);
     if (!product) return;
-    updateProduct(id, { available: !product.available });
+    await updateProduct(id, { available: !product.available });
   };
 
-  const deleteProduct = (id) => {
-    deleteProductById(id);
-  };
-
-  const handleNewItemChange = (field, value) => {
-    setNewItem((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const handleUpload = (event) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      const preview = URL.createObjectURL(file);
-      setNewItem((prev) => ({ ...prev, image: file, preview }));
-    }
-  };
-
-  const clearNewItem = () => {
-    if (newItem.preview) {
-      URL.revokeObjectURL(newItem.preview);
-    }
-    setNewItem({ name: '', price: '', category: categoryFolders[0].name, description: '', image: null, preview: null });
-  };
-
-  const addNewProduct = () => {
-    if (!newItem.name || !newItem.price || !newItem.description || !newItem.preview) {
-      return;
-    }
-    const category = categoryFolders.find((cat) => cat.name === newItem.category) || categoryFolders[0];
-    const newProduct = {
-      id: `new-${Date.now()}`,
-      name: newItem.name,
-      category: category.name,
-      slug: category.slug,
-      price: parseFloat(newItem.price),
-      description: newItem.description,
-      image: newItem.preview,
-      available: true
-    };
-    addProduct(newProduct);
-    clearNewItem();
-  };
+  const deleteProduct = async (id) => deleteProductById(id);
 
   const handleCompanyChange = (field, value) => {
     setCompanyInfo((prev) => ({ ...prev, [field]: value }));
   };
+
+  if (!authReady) {
+    return <div className="min-h-screen bg-slate-950 p-8 text-center text-white">Checking Firebase session…</div>;
+  }
+
+  if (!isAdmin) {
+    return (
+      <div className="min-h-screen bg-slate-950 px-4 py-16">
+        <div className="mx-auto w-full max-w-md rounded-[32px] bg-white p-8 shadow-2xl">
+          <h1 className="text-2xl font-serif font-semibold text-slate-950">Manager Access Required</h1>
+          {currentUser ? (
+            <>
+              <p className="my-6 text-sm text-red-600">The signed-in account {currentUser.email} is not authorized to manage this store.</p>
+              <button onClick={logout} className="w-full rounded-sm bg-black py-3 text-sm font-semibold uppercase tracking-[0.2em] text-white">Sign out</button>
+            </>
+          ) : (
+            <div className="mt-6 space-y-4">
+              <input type="email" value={email} onChange={(event) => setEmail(event.target.value)} className="w-full rounded-sm border border-slate-200 px-4 py-3 text-sm" placeholder="Admin email" />
+              <input type="password" value={password} onChange={(event) => setPassword(event.target.value)} onKeyDown={(event) => event.key === 'Enter' && handleLogin()} className="w-full rounded-sm border border-slate-200 px-4 py-3 text-sm" placeholder="Firebase password" />
+              {authError && <p className="text-sm text-red-600">{authError}</p>}
+              <button onClick={handleLogin} className="w-full rounded-sm bg-[#D4AF37] py-3 text-sm font-semibold uppercase tracking-[0.2em] text-black">Sign in securely</button>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#f3f4f6] relative">
@@ -166,28 +157,7 @@ const AdminDashboard = () => {
         </div>
       )}
 
-      {!isAuthenticated && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/90 p-6">
-          <div className="w-full max-w-md rounded-[32px] bg-white p-8 shadow-2xl">
-            <h2 className="text-2xl font-serif font-semibold text-slate-950 mb-4">Manager Access Required</h2>
-            <p className="text-sm text-slate-600 mb-6">Enter the password to access the dashboard.</p>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleLogin()}
-              className="w-full border border-slate-200 rounded-sm px-4 py-3 mb-4 text-sm focus:outline-none focus:border-[#D4AF37]"
-              placeholder="Enter manager password"
-            />
-            {authError && <p className="text-sm text-red-500 mb-4">{authError}</p>}
-            <button onClick={handleLogin} className="w-full bg-[#D4AF37] text-black uppercase tracking-[0.2em] font-semibold text-sm py-3 rounded-sm hover:bg-black hover:text-white transition">
-              Submit Password
-            </button>
-          </div>
-        </div>
-      )}
-
-      <div className={isAuthenticated ? 'opacity-100' : 'opacity-20 pointer-events-none'}>
+      <div>
         <div className="flex flex-col md:flex-row">
           <aside className="w-full md:w-56 lg:w-72 bg-[#1a1a1a] text-gray-400 p-4 sm:p-6 flex flex-col space-y-3 sm:space-y-4">
             <div className="border-b border-neutral-800 pb-3 sm:pb-4">
@@ -213,6 +183,11 @@ const AdminDashboard = () => {
           </aside>
 
           <main className="flex-1 p-4 sm:p-6 lg:p-10">
+              {(backendError || seedStatus === 'running') && (
+                <div className={`mb-4 rounded-2xl p-4 text-sm ${backendError ? 'bg-red-50 text-red-700' : 'bg-amber-50 text-amber-800'}`}>
+                  {backendError || 'Seeding the existing catalogue into Firestore…'}
+                </div>
+              )}
               <div className="bg-white rounded-2xl sm:rounded-[32px] shadow-sm border border-gray-100 p-4 sm:p-6">
               {activeTab === 'Dashboard' && (
                 <div>
@@ -318,67 +293,11 @@ const AdminDashboard = () => {
               )}
 
               {activeTab === 'Add New Item' && (
-                <div>
-                  <div className="mb-6">
-                    <h1 className="text-2xl font-serif font-semibold text-slate-950">Add New Item</h1>
-                    <p className="text-sm text-slate-500 mt-2">Upload from local device, preview, and add a new product.</p>
-                  </div>
-                  <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
-                    <div className="space-y-6">
-                      <div>
-                        <label className="block text-xs uppercase tracking-[0.35em] text-slate-500 font-semibold mb-2">Upload Image</label>
-                        <input type="file" accept="image/*" onChange={handleUpload} className="w-full border border-slate-200 rounded-sm p-3 text-sm" />
-                      </div>
-                      <div>
-                        <label className="block text-xs uppercase tracking-[0.35em] text-slate-500 font-semibold mb-2">Product Name</label>
-                        <input type="text" value={newItem.name} onChange={(e) => handleNewItemChange('name', e.target.value)} className="w-full border border-slate-200 rounded-sm px-4 py-3 text-sm focus:outline-none focus:border-[#D4AF37]" />
-                      </div>
-                      <div>
-                        <label className="block text-xs uppercase tracking-[0.35em] text-slate-500 font-semibold mb-2">Price (₵)</label>
-                        <input type="number" value={newItem.price} onChange={(e) => handleNewItemChange('price', e.target.value)} className="w-full border border-slate-200 rounded-sm px-4 py-3 text-sm focus:outline-none focus:border-[#D4AF37]" />
-                      </div>
-                      <div>
-                        <label className="block text-xs uppercase tracking-[0.35em] text-slate-500 font-semibold mb-2">Category</label>
-                        <select value={newItem.category} onChange={(e) => handleNewItemChange('category', e.target.value)} className="w-full border border-slate-200 rounded-sm px-4 py-3 text-sm bg-white focus:outline-none focus:border-[#D4AF37]">
-                          {categoryFolders.map((category) => (
-                            <option key={category.slug} value={category.name}>{category.name}</option>
-                          ))}
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-xs uppercase tracking-[0.35em] text-slate-500 font-semibold mb-2">Description</label>
-                        <textarea value={newItem.description} onChange={(e) => handleNewItemChange('description', e.target.value)} rows="4" className="w-full border border-slate-200 rounded-sm px-4 py-3 text-sm focus:outline-none focus:border-[#D4AF37]" />
-                      </div>
-                    </div>
-                    <div className="rounded-[32px] border border-slate-200 bg-slate-50 p-6">
-                      <h2 className="text-xl font-serif font-semibold text-slate-950 mb-4">Preview Item</h2>
-                      <div className="rounded-3xl border border-slate-200 overflow-hidden bg-white">
-                        {newItem.preview ? (
-                          <img src={newItem.preview} alt="Preview" className="h-72 w-full object-cover" />
-                        ) : (
-                          <div className="flex h-72 items-center justify-center text-sm text-slate-500">No image selected yet.</div>
-                        )}
-                      </div>
-                      <div className="mt-6 space-y-4">
-                        <div>
-                          <p className="text-sm text-slate-500">Name</p>
-                          <p className="font-semibold text-slate-950">{newItem.name || 'Preview title'}</p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-slate-500">Price</p>
-                          <p className="font-semibold text-slate-950">{newItem.price ? `₵${newItem.price}` : '₵0.00'}</p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-slate-500">Category</p>
-                          <p className="font-semibold text-slate-950">{newItem.category}</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="mt-8 flex flex-col gap-4 md:flex-row md:justify-end">
-                    <button onClick={clearNewItem} className="w-full md:w-auto border border-slate-300 text-slate-700 px-6 py-3 uppercase tracking-[0.2em] font-semibold rounded-sm hover:bg-slate-100 transition">Clear Form</button>
-                    <button onClick={addNewProduct} className="w-full md:w-auto bg-[#D4AF37] text-black px-6 py-3 uppercase tracking-[0.2em] font-semibold rounded-sm hover:bg-black hover:text-white transition">Save Product</button>
-                  </div>
+                <div className="rounded-[32px] border border-amber-200 bg-amber-50 p-8">
+                  <h1 className="text-2xl font-serif font-semibold text-slate-950">New product uploads are paused</h1>
+                  <p className="mt-3 max-w-2xl text-sm leading-7 text-amber-900">
+                    Existing product details, prices, categories and availability are stored in Firestore and can be edited under Manage Spray. Adding a product with a new image requires Firebase Storage, which is intentionally disabled until the owner enables Blaze billing.
+                  </p>
                 </div>
               )}
 

@@ -1,9 +1,9 @@
-import React, { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useCart } from '../context/CartContext';
 import { FiSearch, FiList, FiClock } from 'react-icons/fi';
 
 const UserDashboard = () => {
-  const { orderHistory, clearOrderHistory } = useCart();
+  const { orderHistory, currentUser, authReady } = useCart();
   const [showHistory, setShowHistory] = useState(true);
   const [trackName, setTrackName] = useState('');
   const [trackId, setTrackId] = useState('');
@@ -37,6 +37,11 @@ const UserDashboard = () => {
   return (
     <div className="min-h-screen bg-slate-50 py-12 sm:py-16">
       <div className="max-w-6xl mx-auto px-3 sm:px-6 lg:px-8">
+        {authReady && !currentUser && (
+          <div className="mb-6 rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900">
+            Sign in to load your Firebase order history.
+          </div>
+        )}
         <div className="mb-10 rounded-2xl sm:rounded-[32px] border border-gray-200 bg-white p-4 sm:p-8 shadow-sm">
           <div className="flex flex-col gap-3 sm:gap-4 md:flex-row md:items-center md:justify-between">
             <div>
@@ -133,11 +138,6 @@ const UserDashboard = () => {
                           </div>
                         </div>
                       ))}
-                    </div>
-                    <div className="mt-6 flex justify-end">
-                      <button onClick={clearOrderHistory} className="rounded-full bg-red-500 px-6 py-3 text-xs uppercase tracking-[0.2em] font-bold text-white hover:bg-red-600 transition">
-                        Clear History
-                      </button>
                     </div>
                   </>
                 )}

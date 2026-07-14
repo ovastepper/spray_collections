@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useCart } from '../context/CartContext';
 
@@ -7,6 +7,7 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'signin', onSuccess }) => {
   const [mode, setMode] = useState(initialMode);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [signupData, setSignupData] = useState({
     firstName: '',
@@ -20,19 +21,6 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'signin', onSuccess }) => {
   });
   const [signinData, setSigninData] = useState({ email: '', password: '' });
 
-  useEffect(() => {
-    setMode(initialMode);
-    setError('');
-    setSuccess('');
-  }, [initialMode, isOpen]);
-
-  useEffect(() => {
-    if (!isOpen) {
-      setError('');
-      setSuccess('');
-    }
-  }, [isOpen]);
-
   if (!isOpen || typeof document === 'undefined') {
     return null;
   }
@@ -45,11 +33,13 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'signin', onSuccess }) => {
     setSigninData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     setError('');
     setSuccess('');
+    setIsSubmitting(true);
     if (mode === 'signup') {
-      const result = signup(signupData);
+      const result = await signup(signupData);
+      setIsSubmitting(false);
       if (!result.success) {
         setError(result.message);
         return;
@@ -60,7 +50,8 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'signin', onSuccess }) => {
       return;
     }
 
-    const result = login(signinData);
+    const result = await login(signinData);
+    setIsSubmitting(false);
     if (!result.success) {
       setError(result.message);
       return;
@@ -93,7 +84,7 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'signin', onSuccess }) => {
                 <p className="mt-2 text-lg font-semibold text-slate-950">{`${currentUser.firstName} ${currentUser.lastName}`}</p>
                 <p className="text-sm text-slate-500">{currentUser.email}</p>
               </div>
-              <button onClick={() => { logout(); setSuccess('You have been signed out.'); }} className="w-full rounded-full bg-black px-6 py-3 text-sm uppercase tracking-[0.2em] font-semibold text-white hover:bg-amber-400 transition">Logout</button>
+              <button onClick={async () => { await logout(); setSuccess('You have been signed out.'); }} className="w-full rounded-full bg-black px-6 py-3 text-sm uppercase tracking-[0.2em] font-semibold text-white hover:bg-amber-400 transition">Logout</button>
             </div>
           ) : mode === 'signup' ? (
             <div className="grid gap-4 sm:grid-cols-2">
@@ -148,8 +139,8 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'signin', onSuccess }) => {
 
           {!currentUser && (
             <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
-              <button onClick={handleSubmit} className="inline-flex items-center justify-center rounded-full bg-black px-6 py-3 text-sm uppercase tracking-[0.2em] font-semibold text-white hover:bg-amber-400 transition">
-                {mode === 'signup' ? 'Create Account' : 'Sign In'}
+              <button disabled={isSubmitting} onClick={handleSubmit} className="inline-flex items-center justify-center rounded-full bg-black px-6 py-3 text-sm uppercase tracking-[0.2em] font-semibold text-white hover:bg-amber-400 transition disabled:cursor-wait disabled:opacity-60">
+                {isSubmitting ? 'Please wait…' : mode === 'signup' ? 'Create Account' : 'Sign In'}
               </button>
               <button onClick={() => setMode(mode === 'signup' ? 'signin' : 'signup')} className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-slate-50 px-6 py-3 text-sm uppercase tracking-[0.2em] font-semibold text-slate-700 hover:bg-slate-100 transition">
                 {mode === 'signup' ? 'Already have an account?' : 'Create new account'}
