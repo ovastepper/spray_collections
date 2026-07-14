@@ -12,6 +12,27 @@ const loadStoredItems = (key, fallback = []) => {
   }
 };
 
+const normalizeEmail = (value) => (value || '').trim().toLowerCase();
+const normalizePassword = (value) => (value || '').trim();
+
+const normalizeUsers = (users) => {
+  if (!Array.isArray(users)) {
+    return [];
+  }
+
+  return users.map((user) => ({
+    ...user,
+    email: normalizeEmail(user.email),
+    password: normalizePassword(user.password),
+    firstName: (user.firstName || '').trim(),
+    middleName: (user.middleName || '').trim(),
+    lastName: (user.lastName || '').trim(),
+    country: (user.country || '').trim(),
+    address: (user.address || '').trim(),
+    phone: (user.phone || '').trim(),
+  }));
+};
+
 const hydrateStoredProducts = (storedProducts, initialProducts) => {
   if (!Array.isArray(storedProducts) || !storedProducts.length) {
     return initialProducts;
@@ -38,8 +59,19 @@ export const CartProvider = ({ children }) => {
   const [cartItems, setCartItems] = useState(() => loadStoredItems('cartItems'));
   const [orderHistory, setOrderHistory] = useState(() => loadStoredItems('orderHistory'));
   const [products, setProducts] = useState(() => hydrateStoredProducts(loadStoredItems('products', initialProducts), initialProducts));
-  const [currentUser, setCurrentUser] = useState(() => loadStoredItems('currentUser', null));
-  const [users, setUsers] = useState(() => loadStoredItems('users', []));
+  const [currentUser, setCurrentUser] = useState(() => {
+    const storedUser = loadStoredItems('currentUser', null);
+    if (!storedUser) {
+      return null;
+    }
+
+    return {
+      ...storedUser,
+      email: normalizeEmail(storedUser.email),
+      password: normalizePassword(storedUser.password),
+    };
+  });
+  const [users, setUsers] = useState(() => normalizeUsers(loadStoredItems('users', [])));
 
   useEffect(() => {
     localStorage.setItem('cartItems', JSON.stringify(cartItems));
@@ -83,11 +115,15 @@ export const CartProvider = ({ children }) => {
   const clearCart = () => setCartItems([]);
 
   const signup = ({ firstName, middleName, lastName, email, password, country, address, phone }) => {
-    const emailLower = email.trim().toLowerCase();
-    if (!firstName || !lastName || !emailLower || !password || !country || !address || !phone) {
+    const emailLower = normalizeEmail(email);
+    const trimmedPassword = normalizePassword(password);
+
+    if (!firstName || !lastName || !emailLower || !trimmedPassword || !country || !address || !phone) {
       return { success: false, message: 'All sign up fields are required.' };
     }
-    if (users.some((user) => user.email === emailLower)) {
+
+    const normalizedUsers = normalizeUsers(users);
+    if (normalizedUsers.some((user) => user.email === emailLower)) {
       return { success: false, message: 'An account already exists for this email.' };
     }
 
@@ -97,30 +133,40 @@ export const CartProvider = ({ children }) => {
       middleName: middleName.trim(),
       lastName: lastName.trim(),
       email: emailLower,
-      password,
+      password: trimmedPassword,
       country: country.trim(),
       address: address.trim(),
       phone: phone.trim(),
       createdAt: new Date().toISOString()
     };
 
-    setUsers((prev) => [...prev, newUser]);
+    setUsers((prev) => normalizeUsers([...prev, newUser]));
     setCurrentUser(newUser);
     return { success: true, message: 'Account created successfully. You are now signed in.' };
   };
 
   const login = ({ email, password }) => {
-    const emailLower = email.trim().toLowerCase();
-    if (!emailLower || !password) {
+    const emailLower = normalizeEmail(email);
+    const trimmedPassword = normalizePassword(password);
+
+    if (!emailLower || !trimmedPassword) {
       return { success: false, message: 'Email and password are required.' };
     }
 
-    const existingUser = users.find((user) => user.email === emailLower);
-    if (!existingUser || existingUser.password !== password) {
+    const normalizedUsers = normalizeUsers(users);
+    const existingUser = normalizedUsers.find((user) => user.email === emailLower);
+    if (!existingUser || existingUser.password !== trimmedPassword) {
       return { success: false, message: 'Invalid email or password.' };
     }
 
-    setCurrentUser(existingUser);
+    const signedInUser = {
+      ...existingUser,
+      email: emailLower,
+      password: trimmedPassword,
+    };
+
+    setUsers(normalizedUsers);
+    setCurrentUser(signedInUser);
     return { success: true, message: 'Successfully signed in.' };
   };
 
