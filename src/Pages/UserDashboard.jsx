@@ -62,7 +62,7 @@ const UserDashboard = () => {
                   <h2 className="text-xl font-serif font-semibold text-slate-950">Track Item</h2>
                   <p className="text-sm text-slate-500 mt-2">Enter the item name and order ID to check delivery status.</p>
                 </div>
-                <div className="rounded-full bg-amber-100 text-amber-800 px-4 py-2 text-xs uppercase tracking-[0.25em]">{orderedCount} completed orders</div>
+                <div className="rounded-full bg-amber-100 text-amber-800 px-4 py-2 text-xs uppercase tracking-[0.25em]">{orderedCount} orders</div>
               </div>
               <div className="grid gap-4 sm:grid-cols-2">
                 <label className="block text-sm text-slate-600">
@@ -105,7 +105,7 @@ const UserDashboard = () => {
                   </div>
                 </div>
                 {orderHistory.length === 0 ? (
-                  <p className="text-sm text-slate-500">No completed orders are available yet.</p>
+                  <p className="text-sm text-slate-500">No orders are available yet.</p>
                 ) : (
                   <>
                     <div className="space-y-4">
@@ -136,6 +136,18 @@ const UserDashboard = () => {
                               </div>
                             ))}
                           </div>
+                          {order.statusHistory?.length > 0 && (
+                            <div className="mt-4 border-t border-slate-200 pt-4">
+                              <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Status history</p>
+                              <div className="flex flex-wrap gap-2">
+                                {order.statusHistory.map((entry, index) => (
+                                  <span key={`${entry.status}-${index}`} className="rounded-full bg-white px-3 py-1 text-xs text-slate-600 ring-1 ring-slate-200">
+                                    {entry.status}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>

@@ -7,20 +7,24 @@ import {
 } from 'firebase/auth';
 import {
   collection,
-  deleteDoc,
   doc,
   getDoc,
-  getDocs,
   onSnapshot,
   query,
   serverTimestamp,
   setDoc,
-  updateDoc,
-  where,
-  writeBatch
+  where
 } from 'firebase/firestore';
 import { products as initialProducts } from '../data/productData';
 import { adminUid, auth, db } from '../config/firebase';
+import {
+  archiveInventoryProduct,
+  changeOrderStatus,
+  createOrder,
+  migrateInventory,
+  saveInventoryProduct,
+  seedCatalog
+} from '../Services/backendApi';
 
 const CartContext = createContext(null);
 
@@ -59,7 +63,8 @@ const toOrder = (snapshot) => {
   const data = snapshot.data();
   return {
     ...data,
-    id: snapshot.id,
+    id: data.orderNumber || snapshot.id,
+    firestoreId: snapshot.id,
     date: data.date || data.createdAt?.toDate?.().toLocaleDateString('en-GB') || ''
   };
 };
@@ -128,6 +133,7 @@ export const CartProvider = ({ children }) => {
           image: localProductsById.get(productDoc.id)?.image || data.image || ''
         };
       })
+      .filter((product) => !product.archived)
       .sort((a, b) => (a.sortIndex ?? 9999) - (b.sortIndex ?? 9999));
     setProducts(nextProducts);
     setBackendError('');
@@ -161,25 +167,7 @@ export const CartProvider = ({ children }) => {
     const seedInitialData = async () => {
       setSeedStatus('running');
       try {
-        const seedRef = doc(db, 'meta', 'catalog-v1');
-        const seedSnapshot = await getDoc(seedRef);
-        if (!seedSnapshot.exists()) {
-          for (let start = 0; start < initialProducts.length; start += 400) {
-            const batch = writeBatch(db);
-            initialProducts.slice(start, start + 400).forEach((product, offset) => {
-              const metadata = { ...product };
-              delete metadata.image;
-              batch.set(doc(db, 'products', product.id), {
-                ...metadata,
-                sortIndex: start + offset
-              });
-            });
-            await batch.commit();
-          }
-
-          await setDoc(doc(db, 'settings', 'company'), defaultCompanyInfo, { merge: true });
-          await setDoc(seedRef, { seededAt: serverTimestamp(), productCount: initialProducts.length });
-        }
+        await seedCatalog(initialProducts, defaultCompanyInfo);
         setSeedStatus('complete');
       } catch (error) {
         console.error('Firebase seed failed:', error);
@@ -191,14 +179,24 @@ export const CartProvider = ({ children }) => {
     seedInitialData();
   }, [isAdmin, seedStatus]);
 
+  useEffect(() => {
+    if (!isAdmin || seedStatus !== 'complete') return;
+    migrateInventory().catch((error) => {
+      setBackendError(error.message || 'Unable to initialize inventory fields.');
+    });
+  }, [isAdmin, seedStatus]);
 
   const addToCart = (product) => {
     setCartItems((items) => {
       const itemId = product.id || `item-${Date.now()}`;
       const existing = items.find((item) => item.id === itemId);
+      const stockLimit = product.trackInventory === false ? 20 : Number(product.stock ?? 0);
       if (existing) {
-        return items.map((item) => (item.id === itemId ? { ...item, qty: item.qty + 1 } : item));
+        return items.map((item) => (
+          item.id === itemId ? { ...item, ...product, qty: Math.min(item.qty + 1, stockLimit) } : item
+        ));
       }
+      if (stockLimit < 1) return items;
       return [...items, { ...product, id: itemId, qty: 1 }];
     });
   };
@@ -206,7 +204,12 @@ export const CartProvider = ({ children }) => {
   const removeFromCart = (productId) => setCartItems((items) => items.filter((item) => item.id !== productId));
 
   const updateQty = (productId, qty) => {
-    setCartItems((items) => items.map((item) => (item.id === productId ? { ...item, qty: Math.max(1, qty) } : item)));
+    setCartItems((items) => items.map((item) => {
+      if (item.id !== productId) return item;
+      const product = products.find((entry) => entry.id === productId);
+      const stockLimit = product?.trackInventory === false ? 20 : Number(product?.stock ?? item.stock ?? 0);
+      return { ...item, ...product, qty: Math.min(Math.max(1, qty), Math.max(1, stockLimit)) };
+    }));
   };
 
   const clearCart = () => setCartItems([]);
@@ -254,51 +257,25 @@ export const CartProvider = ({ children }) => {
 
   const logout = async () => signOut(auth);
 
-  const submitOrder = async ({ items, total, customer = 'Guest' }) => {
+  const submitOrder = async ({ items }) => {
     if (!items.length || !currentUser) {
       return { success: false, message: 'Sign in and add items before placing an order.' };
     }
 
     try {
-      const orderId = `ORD-${Date.now()}`;
-      await setDoc(doc(db, 'orders', orderId), {
-        userId: currentUser.uid,
-        customer,
-        customerEmail: currentUser.email,
-        total,
-        date: new Date().toLocaleDateString('en-GB'),
-        status: 'Pending',
-        createdAt: serverTimestamp(),
-        items: items.map(({ id, name, price, qty, category }) => ({ id, name, price, qty, category: category || '' }))
-      });
+      const result = await createOrder(items);
       clearCart();
-      return { success: true, orderId };
-    } catch {
-      return { success: false, message: 'Unable to save your order. Please try again.' };
+      return { success: true, orderId: result.orderNumber, total: result.total };
+    } catch (error) {
+      return { success: false, message: error.message || 'Unable to save your order. Please try again.' };
     }
   };
 
-  const updateProduct = async (id, changes) => updateDoc(doc(db, 'products', id), changes);
+  const updateProduct = async (id, changes) => saveInventoryProduct(id, changes);
 
-  const addProduct = async (product) => {
-    const metadata = { ...product };
-    delete metadata.image;
-    await setDoc(doc(db, 'products', product.id), metadata);
-  };
+  const deleteProductById = async (productId) => archiveInventoryProduct(productId);
 
-  const deleteProductById = async (productId) => deleteDoc(doc(db, 'products', productId));
-
-  const clearOrderHistory = async () => {
-    if (!isAdmin) return;
-    const snapshot = await getDocs(collection(db, 'orders'));
-    for (let start = 0; start < snapshot.docs.length; start += 400) {
-      const batch = writeBatch(db);
-      snapshot.docs.slice(start, start + 400).forEach((orderDoc) => batch.delete(orderDoc.ref));
-      await batch.commit();
-    }
-  };
-
-  const updateOrderStatus = async (orderId, status) => updateDoc(doc(db, 'orders', orderId), { status });
+  const updateOrderStatus = async (orderId, status, note = '') => changeOrderStatus(orderId, status, note);
 
   const updateCompanyInfo = async (nextCompanyInfo) => {
     await setDoc(doc(db, 'settings', 'company'), nextCompanyInfo, { merge: true });
@@ -318,11 +295,9 @@ export const CartProvider = ({ children }) => {
       totalPrice,
       orderHistory,
       submitOrder,
-      clearOrderHistory,
       updateOrderStatus,
       products,
       updateProduct,
-      addProduct,
       deleteProductById,
       currentUser,
       signup,

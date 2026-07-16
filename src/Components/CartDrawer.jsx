@@ -36,7 +36,13 @@ const CartDrawer = ({ isOpen, onClose }) => {
                         <div className="flex items-center gap-2 mt-3">
                           <button onClick={() => updateQty(item.id, item.qty - 1)} className="p-1 bg-gray-100 rounded-sm hover:bg-gray-200"><FiMinus className="w-3 h-3" /></button>
                           <span className="text-xs font-semibold px-2">{item.qty}</span>
-                          <button onClick={() => updateQty(item.id, item.qty + 1)} className="p-1 bg-gray-100 rounded-sm hover:bg-gray-200"><FiPlus className="w-3 h-3" /></button>
+                          <button
+                            onClick={() => updateQty(item.id, item.qty + 1)}
+                            disabled={item.trackInventory !== false && item.qty >= Number(item.stock ?? 0)}
+                            className="p-1 bg-gray-100 rounded-sm hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-40"
+                          >
+                            <FiPlus className="w-3 h-3" />
+                          </button>
                         </div>
                       </div>
                       <button onClick={() => removeFromCart(item.id)} className="text-sm text-red-500 hover:text-red-600 flex-shrink-0">Remove</button>

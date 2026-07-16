@@ -27,4 +27,10 @@ export default defineConfig([
       'no-unused-vars': ['error', { varsIgnorePattern: '^(React|useEffect)$' }],
     },
   },
+  {
+    files: ['api/**/*.js', 'server/**/*.js'],
+    languageOptions: {
+      globals: globals.node,
+    },
+  },
 ])

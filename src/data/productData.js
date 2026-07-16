@@ -31,7 +31,7 @@ const imageModules = import.meta.glob('../assets/categories/*/*.{jpg,jpeg,png}',
 const formatDisplayName = (fileName) => {
   const baseName = fileName.replace(/\.(jpe?g|png)$/i, '');
   return baseName
-    .replace(/[_\-]+/g, ' ')
+    .replace(/[_-]+/g, ' ')
     .replace(/\s+/g, ' ')
     .trim()
     .split(' ')
@@ -80,7 +80,11 @@ const products = imageEntries.map((item, index) => {
     price,
     image: item.image,
     description: `Premium ${category.name.toLowerCase()} with a rich scent profile built for modern luxury.`,
-    available: true
+    available: true,
+    stock: 10,
+    lowStockThreshold: 3,
+    trackInventory: true,
+    archived: false
   };
 });
 

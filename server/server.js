@@ -95,7 +95,7 @@ const server = http.createServer(async (req, res) => {
         const updatedProducts = [newProduct, ...products.filter((item) => item.id !== newProduct.id)];
         await writeProducts(updatedProducts);
         sendJson(res, 201, newProduct);
-      } catch (error) {
+      } catch {
         sendJson(res, 400, { error: 'Invalid product payload' });
       }
       return;
@@ -114,7 +114,7 @@ const server = http.createServer(async (req, res) => {
         await writeProducts(updatedProducts);
         const updatedProduct = updatedProducts.find((item) => item.id === productId);
         sendJson(res, 200, updatedProduct || {});
-      } catch (error) {
+      } catch {
         sendJson(res, 400, { error: 'Invalid product update payload' });
       }
       return;

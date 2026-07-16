@@ -3,7 +3,10 @@ import { FiShoppingBag } from 'react-icons/fi';
 import { toast } from 'react-toastify';
 
 const ProductCard = ({ product, onAddToCart }) => {
+  const inStock = product.trackInventory === false || Number(product.stock ?? 0) > 0;
+
   const handleAddToCart = () => {
+    if (!inStock) return;
     onAddToCart(product);
     toast.success('✓ Item added to cart successfully!', {
       position: 'top-center',
@@ -28,12 +31,12 @@ const ProductCard = ({ product, onAddToCart }) => {
         <h3 className="mt-4 text-xl font-serif font-semibold text-slate-950">{product.name}</h3>
         <p className="mt-3 text-sm leading-7 text-slate-600 flex-grow">{product.description}</p>
         <button
-          disabled={!product.available}
+          disabled={!product.available || !inStock}
           onClick={handleAddToCart}
           className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-full bg-slate-950 px-5 py-3 text-xs uppercase tracking-[0.2em] font-semibold text-white transition hover:bg-amber-400 hover:text-slate-950 disabled:cursor-not-allowed disabled:bg-slate-300 flex-shrink-0"
         >
           <FiShoppingBag className="w-4 h-4" />
-          {product.available ? 'Add To Cart' : 'Unavailable'}
+          {!product.available ? 'Unavailable' : inStock ? 'Add To Cart' : 'Out of stock'}
         </button>
       </div>
     </article>

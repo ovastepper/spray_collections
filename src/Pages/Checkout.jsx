@@ -21,7 +21,7 @@ const Checkout = () => {
 
     setIsSubmitting(true);
     setOrderError('');
-    const result = await submitOrder({ items: cartItems, total: totalPrice, customer: `${currentUser.firstName} ${currentUser.lastName}`.trim() });
+    const result = await submitOrder({ items: cartItems });
     setIsSubmitting(false);
     if (result.success) {
       navigate('/dashboard');
