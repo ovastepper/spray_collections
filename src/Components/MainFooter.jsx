@@ -1,39 +1,42 @@
 import React from 'react';
-import { FiInstagram, FiPhone, FiClock, FiGlobe } from 'react-icons/fi';
+import { Link } from 'react-router-dom';
+import { FiInstagram, FiMessageCircle } from 'react-icons/fi';
 
 const MainFooter = () => (
-  <footer className="bg-slate-950 text-slate-200 py-8 sm:py-12 lg:py-16">
-    <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 grid gap-6 sm:gap-8 md:grid-cols-2 lg:grid-cols-3">
-      <div>
-        <h2 className="text-lg sm:text-xl font-serif text-white mb-3 sm:mb-4">Cianelle_Luxe Fragrances</h2>
-        <p className="text-xs sm:text-sm leading-6 sm:leading-7 text-slate-400">A premium fragrance experience crafted for luxury lovers. Browse body sprays, perfume oils, long lasting sprays, and elegant scents.</p>
-      </div>
-      <div>
-        <h3 className="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-4">Connect with Us</h3>
-        <ul className="space-y-2 sm:space-y-3 text-xs sm:text-sm text-slate-400">
-          <li className="flex items-center gap-3">
-            <FiPhone className="w-4 h-4 text-amber-300 flex-shrink-0" />
-            WhatsApp: <a href="https://wa.me/233247283407" target="_blank" rel="noreferrer" className="text-white hover:text-amber-300">0247283407</a>
-          </li>
-          <li className="flex items-center gap-3">
-            <FiInstagram className="w-4 h-4 text-amber-300 flex-shrink-0" />
-            Instagram: <a href="https://instagram.com/Sheis_cianelle" target="_blank" rel="noreferrer" className="text-white hover:text-amber-300">Sheis_cianelle</a>
-          </li>
-          <li className="flex items-center gap-3">
-            <FiGlobe className="w-4 h-4 text-amber-300 flex-shrink-0" />
-            Snapchat: <a href="https://www.snapchat.com/add/christel_dior" target="_blank" rel="noreferrer" className="text-white hover:text-amber-300">christel_dior</a>
-          </li>
-        </ul>
-      </div>
-      <div className="sm:col-span-2 md:col-span-1">
-        <h3 className="text-base sm:text-lg font-semibold text-white mb-4">Opening Hours</h3>
-        <div className="space-y-2 sm:space-y-3 text-xs sm:text-sm text-slate-400">
-          <p className="flex items-center gap-3"><FiClock className="w-4 h-4 text-amber-300 flex-shrink-0" /> Monday – Saturday: 8:00am GMT – 6:00pm</p>
-          <p className="flex items-center gap-3"><FiClock className="w-4 h-4 text-amber-300 flex-shrink-0" /> Sunday: 12:00pm GMT – 6:00pm</p>
+  <footer className="bg-slate-950 text-slate-300">
+    <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
+      <div className="grid gap-10 border-b border-white/10 pb-12 md:grid-cols-2 lg:grid-cols-4">
+        <div className="lg:col-span-2">
+          <p className="font-serif text-2xl tracking-[0.14em] text-white">CIANELLE_LUXE</p>
+          <p className="mt-4 max-w-md text-sm leading-7 text-slate-400">Expressive fragrances for every mood, memory, and entrance. Discover your signature with a collection curated in Ghana.</p>
+          <div className="mt-6 flex gap-3">
+            <a href="https://wa.me/233247283407" target="_blank" rel="noreferrer" aria-label="Chat with Cianelle Luxe on WhatsApp" className="flex h-11 w-11 items-center justify-center rounded-full border border-white/15 text-white hover:border-amber-300 hover:text-amber-300"><FiMessageCircle /></a>
+            <a href="https://instagram.com/Sheis_cianelle" target="_blank" rel="noreferrer" aria-label="Follow Cianelle Luxe on Instagram" className="flex h-11 w-11 items-center justify-center rounded-full border border-white/15 text-white hover:border-amber-300 hover:text-amber-300"><FiInstagram /></a>
+          </div>
+        </div>
+        <div>
+          <h2 className="text-xs font-bold uppercase tracking-[0.24em] text-white">Explore</h2>
+          <ul className="mt-5 space-y-3 text-sm text-slate-400">
+            <li><Link to="/menu" className="min-h-0 hover:text-amber-300">Shop all</Link></li>
+            <li><Link to="/about" className="min-h-0 hover:text-amber-300">Our story</Link></li>
+            <li><Link to="/contact" className="min-h-0 hover:text-amber-300">Contact</Link></li>
+            <li><Link to="/dashboard" className="min-h-0 hover:text-amber-300">My account</Link></li>
+          </ul>
+        </div>
+        <div>
+          <h2 className="text-xs font-bold uppercase tracking-[0.24em] text-white">Visit or message</h2>
+          <div className="mt-5 space-y-3 text-sm leading-6 text-slate-400">
+            <p>WhatsApp: <a href="https://wa.me/233247283407" target="_blank" rel="noreferrer" className="min-h-0 text-white hover:text-amber-300">024 728 3407</a></p>
+            <p>Monday–Saturday<br />8:00am–6:00pm GMT</p>
+            <p>Sunday<br />12:00pm–6:00pm GMT</p>
+          </div>
         </div>
       </div>
+      <div className="flex flex-col gap-3 pt-6 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between">
+        <p>© {new Date().getFullYear()} Cianelle_Luxe Fragrances. All rights reserved.</p>
+        <p>Confidence, bottled.</p>
+      </div>
     </div>
-    <div className="mt-8 sm:mt-12 border-t border-white/10 pt-4 sm:pt-6 text-center text-xs sm:text-sm text-slate-500">© {new Date().getFullYear()} Cianelle_Luxe Fragrances. All rights reserved.</div>
   </footer>
 );
 
