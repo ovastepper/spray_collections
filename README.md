@@ -24,7 +24,7 @@ The `.env` file is intentionally ignored by Git. Firebase web configuration is n
 - The shopping cart stays in the browser's `localStorage`.
 - Product images remain bundled with the app. Cloud Storage is intentionally disabled until the owner chooses to enable Blaze billing.
 
-The authorized administrator UID is enforced in Firestore rules, the client configuration and the serverless API configuration. Changing the administrator requires updating all three values and redeploying.
+Authorized administrator UIDs are enforced in Firestore rules, the client configuration and the serverless API configuration. Keep all three allowlists synchronized and redeploy after adding or removing an administrator.
 
 ## Serverless order and inventory flow
 
@@ -47,10 +47,10 @@ The serverless functions need a Firebase service account. The Firebase project o
 FIREBASE_ADMIN_PROJECT_ID
 FIREBASE_ADMIN_CLIENT_EMAIL
 FIREBASE_ADMIN_PRIVATE_KEY
-FIREBASE_ADMIN_UID
+FIREBASE_ADMIN_UIDS
 ```
 
-Use the same administrator UID for `FIREBASE_ADMIN_UID` and `VITE_FIREBASE_ADMIN_UID`.
+Set `FIREBASE_ADMIN_UIDS` and `VITE_FIREBASE_ADMIN_UIDS` to the same comma-separated UID list. The legacy single-admin variables `FIREBASE_ADMIN_UID` and `VITE_FIREBASE_ADMIN_UID` remain supported during migration.
 
 For the private key, paste the complete value including:
 

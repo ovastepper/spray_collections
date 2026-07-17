@@ -17,4 +17,10 @@ const app = getApps()[0] || initializeApp({
 
 export const adminAuth = getAuth(app);
 export const adminDb = getFirestore(app);
-export const configuredAdminUid = process.env.FIREBASE_ADMIN_UID;
+export const configuredAdminUids = new Set(
+  [process.env.FIREBASE_ADMIN_UIDS, process.env.FIREBASE_ADMIN_UID]
+    .filter(Boolean)
+    .flatMap((value) => value.split(','))
+    .map((uid) => uid.trim())
+    .filter(Boolean)
+);

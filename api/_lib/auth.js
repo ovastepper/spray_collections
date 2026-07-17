@@ -1,4 +1,4 @@
-import { adminAuth, configuredAdminUid } from './firebaseAdmin.js';
+import { adminAuth, configuredAdminUids } from './firebaseAdmin.js';
 
 const getBearerToken = (request) => {
   const header = request.headers.authorization || '';
@@ -24,7 +24,7 @@ export const requireUser = async (request) => {
 
 export const requireAdmin = async (request) => {
   const user = await requireUser(request);
-  if (!configuredAdminUid || user.uid !== configuredAdminUid) {
+  if (!configuredAdminUids.has(user.uid)) {
     const error = new Error('Administrator access is required.');
     error.status = 403;
     throw error;

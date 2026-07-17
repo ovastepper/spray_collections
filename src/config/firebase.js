@@ -26,4 +26,14 @@ const app = initializeApp({
 
 export const auth = getAuth(app);
 export const db = getFirestore(app);
-export const adminUid = import.meta.env.VITE_FIREBASE_ADMIN_UID;
+
+const configuredAdminUids = [
+  import.meta.env.VITE_FIREBASE_ADMIN_UIDS,
+  import.meta.env.VITE_FIREBASE_ADMIN_UID
+]
+  .filter(Boolean)
+  .flatMap((value) => value.split(','))
+  .map((uid) => uid.trim())
+  .filter(Boolean);
+
+export const adminUids = [...new Set(configuredAdminUids)];

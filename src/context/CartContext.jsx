@@ -16,7 +16,7 @@ import {
   where
 } from 'firebase/firestore';
 import { products as initialProducts } from '../data/productData';
-import { adminUid, auth, db } from '../config/firebase';
+import { adminUids, auth, db } from '../config/firebase';
 import {
   archiveInventoryProduct,
   changeOrderStatus,
@@ -79,7 +79,7 @@ export const CartProvider = ({ children }) => {
   const [backendError, setBackendError] = useState('');
   const [seedStatus, setSeedStatus] = useState('idle');
 
-  const isAdmin = currentUser?.uid === adminUid;
+  const isAdmin = Boolean(currentUser?.uid && adminUids.includes(currentUser.uid));
 
   useEffect(() => {
     localStorage.setItem('cartItems', JSON.stringify(cartItems));
