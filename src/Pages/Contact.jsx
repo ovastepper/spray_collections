@@ -1,54 +1,46 @@
-﻿import React from 'react';
+import React from 'react';
+import { FiInstagram, FiMapPin, FiMessageCircle } from 'react-icons/fi';
+
+const channels = [
+  { icon: FiMessageCircle, label: 'WhatsApp', value: '024 728 3407', note: 'Fastest response', href: 'https://wa.me/233247283407' },
+  { icon: FiInstagram, label: 'Instagram', value: '@Sheis_cianelle', note: 'New arrivals and inspiration', href: 'https://instagram.com/Sheis_cianelle' },
+  { icon: FiMapPin, label: 'Visit us', value: 'Kwadaso, Kumasi', note: 'Monday–Saturday, 8am–6pm', href: null },
+];
 
 const Contact = () => (
-  <main className="min-h-screen bg-[#f8f4ee] text-slate-950">
-    <section className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-12 sm:py-20">
-      <div className="grid gap-8 sm:gap-12 lg:grid-cols-[1.2fr_0.8fr] items-start">
-        <div>
-          <p className="text-sm uppercase tracking-[0.35em] text-amber-400">Get in touch</p>
-          <h1 className="mt-4 text-4xl font-serif font-semibold">Questions about our fragrances?</h1>
-          <p className="mt-4 text-slate-700 leading-8">Reach out via WhatsApp, Instagram, or send a message using the contact details below. Our team is ready to help you find your next signature scent.</p>
-        </div>
-        <div className="rounded-2xl sm:rounded-[32px] bg-white p-6 sm:p-10 shadow-xl shadow-slate-900/5 border border-slate-200">
-          <div className="space-y-6 text-slate-700">
-            <div>
-              <h2 className="text-base font-semibold text-slate-950 mb-2">WhatsApp</h2>
-              <a 
-                href="https://wa.me/233247283407" 
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm text-amber-600 hover:text-amber-700 hover:underline font-semibold transition"
-              >
-                0247283407 (Click to call/message)
-              </a>
-            </div>
-            <div>
-              <h2 className="text-base font-semibold text-slate-950 mb-2">Instagram</h2>
-              <a 
-                href="https://instagram.com/Sheis_cianelle" 
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm text-amber-600 hover:text-amber-700 hover:underline font-semibold transition"
-              >
-                @Sheis_cianelle (Click to visit)
-              </a>
-            </div>
-            <div>
-              <h2 className="text-base font-semibold text-slate-950 mb-2">Snapchat</h2>
-              <a 
-                href="https://snapchat.com/add/christel_dior" 
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm text-amber-600 hover:text-amber-700 hover:underline font-semibold transition"
-              >
-                christel_dior (Click to add)
-              </a>
-            </div>
-            <div>
-              <h2 className="text-base font-semibold text-slate-950">Location</h2>
-              <p className="text-sm">Kwadaso-Kumasi</p>
-            </div>
+  <main className="page-shell">
+    <section className="content-shell py-14 sm:py-20">
+      <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
+        <div className="lg:sticky lg:top-28">
+          <p className="eyebrow">Personal guidance</p>
+          <h1 className="mt-4 max-w-xl font-serif text-4xl leading-tight sm:text-5xl lg:text-6xl">Let’s find your next signature scent.</h1>
+          <p className="mt-5 max-w-lg text-sm leading-7 text-slate-600 sm:text-base">Tell us what you already love, the mood you want, or the occasion you are shopping for. We will help narrow the collection.</p>
+          <div className="mt-8 rounded-2xl bg-slate-950 p-5 text-sm leading-6 text-slate-300">
+            <p className="font-semibold text-white">Not sure where to begin?</p>
+            <p className="mt-1">Send us the name of a fragrance you enjoy and your preferred budget.</p>
           </div>
+        </div>
+
+        <div className="grid gap-4">
+          {channels.map(({ icon: Icon, label, value, note, href }) => {
+            const content = (
+              <>
+                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-800"><Icon className="h-5 w-5" /></span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">{label}</span>
+                  <span className="mt-1 block font-serif text-2xl text-slate-950">{value}</span>
+                  <span className="mt-1 block text-xs text-slate-500">{note}</span>
+                </span>
+                {href && <span className="text-xs font-bold uppercase tracking-[0.15em] text-amber-700">Open</span>}
+              </>
+            );
+
+            return href ? (
+              <a key={label} href={href} target="_blank" rel="noreferrer" className="surface-panel flex items-center gap-4 p-5 transition hover:-translate-y-0.5 hover:border-amber-300 hover:shadow-lg sm:p-6">{content}</a>
+            ) : (
+              <div key={label} className="surface-panel flex items-center gap-4 p-5 sm:p-6">{content}</div>
+            );
+          })}
         </div>
       </div>
     </section>

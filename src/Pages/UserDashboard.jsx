@@ -1,212 +1,114 @@
 import { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { FiLogOut, FiPackage, FiSearch, FiShoppingBag } from 'react-icons/fi';
 import { useCart } from '../context/CartContext';
-import { FiSearch, FiList, FiClock } from 'react-icons/fi';
+
+const statusStyles = {
+  Delivered: 'bg-emerald-100 text-emerald-800',
+  Cancelled: 'bg-red-100 text-red-700',
+  Ready: 'bg-blue-100 text-blue-800',
+};
 
 const UserDashboard = () => {
-  const { orderHistory, currentUser, authReady } = useCart();
-  const [showHistory, setShowHistory] = useState(true);
-  const [trackName, setTrackName] = useState('');
-  const [trackId, setTrackId] = useState('');
-  const [searchResults, setSearchResults] = useState([]);
-  const [searchMessage, setSearchMessage] = useState('');
+  const { orderHistory, currentUser, authReady, logout } = useCart();
+  const [query, setQuery] = useState('');
 
-  const orderedCount = useMemo(() => orderHistory.length, [orderHistory]);
+  const filteredOrders = useMemo(() => {
+    const normalized = query.trim().toLowerCase();
+    if (!normalized) return orderHistory;
+    return orderHistory.filter((order) => (
+      order.id.toLowerCase().includes(normalized)
+      || order.items?.some((item) => item.name.toLowerCase().includes(normalized))
+    ));
+  }, [orderHistory, query]);
 
-  const handleTrack = () => {
-    const nameQuery = trackName.trim().toLowerCase();
-    const idQuery = trackId.trim().toLowerCase();
+  if (!authReady) return <main className="page-shell p-10 text-center text-sm text-slate-500">Loading your account…</main>;
 
-    if (!nameQuery && !idQuery) {
-      setSearchMessage('Please enter an item name or order ID to track.');
-      setSearchResults([]);
-      return;
-    }
-
-    const results = orderHistory.filter((order) => {
-      const orderMatch = idQuery ? order.id.toLowerCase().includes(idQuery) : true;
-      const itemMatch = nameQuery
-        ? order.items.some((item) => item.name.toLowerCase().includes(nameQuery))
-        : true;
-      return orderMatch && itemMatch;
-    });
-
-    setSearchResults(results);
-    setSearchMessage(results.length === 0 ? 'No matching order found yet.' : '');
-  };
+  if (!currentUser) {
+    return (
+      <main className="page-shell py-20">
+        <div className="content-shell">
+          <div className="surface-panel mx-auto max-w-xl p-8 text-center sm:p-12">
+            <FiPackage className="mx-auto h-9 w-9 text-amber-600" />
+            <h1 className="mt-5 font-serif text-3xl">Sign in to see your orders.</h1>
+            <p className="mt-3 text-sm leading-7 text-slate-500">Your order history and live fulfilment updates are protected by your account.</p>
+            <Link to="/" className="primary-button mt-7">Return home</Link>
+          </div>
+        </div>
+      </main>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-slate-50 py-12 sm:py-16">
-      <div className="max-w-6xl mx-auto px-3 sm:px-6 lg:px-8">
-        {authReady && !currentUser && (
-          <div className="mb-6 rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900">
-            Sign in to load your Firebase order history.
+    <main className="page-shell py-10 sm:py-14">
+      <div className="content-shell">
+        <header className="surface-panel overflow-hidden">
+          <div className="bg-slate-950 p-6 text-white sm:p-9">
+            <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-amber-300">Your Cianelle account</p>
+                <h1 className="mt-3 font-serif text-3xl sm:text-4xl">Welcome, {currentUser.firstName}.</h1>
+                <p className="mt-2 text-sm text-slate-400">{currentUser.email}</p>
+              </div>
+              <button type="button" onClick={logout} className="inline-flex items-center gap-2 self-start rounded-full border border-white/20 px-5 py-2.5 text-xs font-bold uppercase tracking-[0.16em] hover:bg-white hover:text-slate-950 sm:self-auto"><FiLogOut /> Sign out</button>
+            </div>
           </div>
-        )}
-        <div className="mb-10 rounded-2xl sm:rounded-[32px] border border-gray-200 bg-white p-4 sm:p-8 shadow-sm">
-          <div className="flex flex-col gap-3 sm:gap-4 md:flex-row md:items-center md:justify-between">
+          <div className="grid divide-y divide-slate-100 sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+            <div className="p-5"><p className="text-xs text-slate-500">Orders placed</p><p className="mt-1 font-serif text-2xl">{orderHistory.length}</p></div>
+            <div className="p-5"><p className="text-xs text-slate-500">In progress</p><p className="mt-1 font-serif text-2xl">{orderHistory.filter((order) => !['Delivered', 'Cancelled'].includes(order.status)).length}</p></div>
+            <div className="p-5"><p className="text-xs text-slate-500">Delivered</p><p className="mt-1 font-serif text-2xl">{orderHistory.filter((order) => order.status === 'Delivered').length}</p></div>
+          </div>
+        </header>
+
+        <section className="mt-8">
+          <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="text-xs uppercase tracking-[0.35em] text-amber-400">User Dashboard</p>
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-serif font-semibold text-slate-950">Track your orders and review purchase history</h1>
+              <p className="eyebrow">Order history</p>
+              <h2 className="mt-2 font-serif text-3xl">Track every purchase.</h2>
             </div>
-            <button onClick={() => setShowHistory(!showHistory)} className="inline-flex items-center justify-center gap-2 rounded-sm border border-slate-200 bg-slate-100 px-4 sm:px-5 py-3 text-xs uppercase tracking-[0.2em] font-bold text-slate-700 hover:bg-slate-200 transition min-h-[44px]">
-              <FiList className="w-4 h-4" /> {showHistory ? 'Hide History' : 'Show History'}
-            </button>
+            <label className="relative block w-full sm:max-w-sm">
+              <span className="sr-only">Search orders</span>
+              <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Order ID or fragrance" className="field-control pl-11" />
+            </label>
           </div>
-        </div>
 
-        <div className="grid gap-6 sm:gap-8 lg:grid-cols-[1.1fr_0.9fr]">
-          <div className="space-y-6">
-            <div className="rounded-[32px] border border-gray-200 bg-white p-6 shadow-sm">
-              <div className="flex items-center justify-between mb-6 gap-4">
-                <div>
-                  <h2 className="text-xl font-serif font-semibold text-slate-950">Track Item</h2>
-                  <p className="text-sm text-slate-500 mt-2">Enter the item name and order ID to check delivery status.</p>
-                </div>
-                <div className="rounded-full bg-amber-100 text-amber-800 px-4 py-2 text-xs uppercase tracking-[0.25em]">{orderedCount} orders</div>
-              </div>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <label className="block text-sm text-slate-600">
-                  Item Name
-                  <input
-                    type="text"
-                    value={trackName}
-                    onChange={(e) => setTrackName(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleTrack()}
-                    className="mt-2 w-full rounded-sm border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:outline-none focus:border-amber-300"
-                    placeholder="e.g. Floral Musk"
-                  />
-                </label>
-                <label className="block text-sm text-slate-600">
-                  Order ID
-                  <input
-                    type="text"
-                    value={trackId}
-                    onChange={(e) => setTrackId(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleTrack()}
-                    className="mt-2 w-full rounded-sm border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:outline-none focus:border-amber-300"
-                    placeholder="e.g. ORD-1623456789000"
-                  />
-                </label>
-              </div>
-              <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
-                <button onClick={handleTrack} className="inline-flex items-center justify-center gap-2 rounded-sm bg-black px-6 py-3 text-xs uppercase tracking-[0.2em] font-bold text-white hover:bg-amber-400 transition">
-                  <FiSearch className="w-4 h-4" /> Track Item
-                </button>
-                {searchMessage && <p className="text-sm text-slate-500">{searchMessage}</p>}
-              </div>
+          {filteredOrders.length === 0 ? (
+            <div className="surface-panel mt-6 p-10 text-center">
+              <FiShoppingBag className="mx-auto h-8 w-8 text-slate-300" />
+              <h3 className="mt-4 font-serif text-2xl">{orderHistory.length ? 'No matching order.' : 'No orders yet.'}</h3>
+              <p className="mt-2 text-sm text-slate-500">{orderHistory.length ? 'Try another order ID or fragrance name.' : 'Your first fragrance is waiting in the collection.'}</p>
+              {!orderHistory.length && <Link to="/menu" className="primary-button mt-6">Explore fragrances</Link>}
             </div>
-
-            {showHistory && (
-              <div className="rounded-[32px] border border-gray-200 bg-white p-6 shadow-sm">
-                <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <h2 className="text-xl font-serif font-semibold text-slate-950">Purchase History</h2>
-                    <p className="text-sm text-slate-500 mt-2">Review all completed and pending orders with item IDs and status.</p>
+          ) : (
+            <div className="mt-6 space-y-4">
+              {filteredOrders.map((order) => (
+                <article key={order.id} className="surface-panel p-5 sm:p-6">
+                  <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Order {order.id}</p>
+                      <p className="mt-2 text-sm text-slate-500">Placed {order.date || 'recently'} · {order.items?.length || 0} products</p>
+                    </div>
+                    <div className="flex items-center gap-3 sm:text-right">
+                      <span className={`rounded-full px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.14em] ${statusStyles[order.status] || 'bg-amber-100 text-amber-800'}`}>{order.status}</span>
+                      <span className="font-serif text-xl font-semibold">₵{Number(order.total || 0).toFixed(2)}</span>
+                    </div>
                   </div>
-                </div>
-                {orderHistory.length === 0 ? (
-                  <p className="text-sm text-slate-500">No orders are available yet.</p>
-                ) : (
-                  <>
-                    <div className="space-y-4">
-                      {orderHistory.map((order) => (
-                        <div key={order.id} className="rounded-3xl border border-slate-100 bg-slate-50 p-4">
-                          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                            <div>
-                              <p className="text-xs uppercase tracking-[0.3em] text-amber-400">Order ID</p>
-                              <p className="text-lg font-semibold text-slate-950">{order.id}</p>
-                            </div>
-                            <div className="space-y-1 text-sm text-slate-600">
-                              <p><span className="font-semibold text-slate-950">Status:</span> {order.status}</p>
-                              <p><span className="font-semibold text-slate-950">Date:</span> {order.date}</p>
-                              <p><span className="font-semibold text-slate-950">Total:</span> ₵{order.total.toFixed(2)}</p>
-                            </div>
-                          </div>
-                          <div className="mt-4 border-t border-slate-200 pt-4 space-y-3">
-                            {order.items.map((item) => (
-                              <div key={item.id} className="grid gap-2 sm:grid-cols-[1.2fr_0.8fr] items-center rounded-2xl bg-white p-3 border border-slate-200">
-                                <div>
-                                  <p className="text-sm font-semibold text-slate-950">{item.name}</p>
-                                  <p className="text-xs text-slate-500 mt-1">Item ID: {item.id}</p>
-                                </div>
-                                <div className="text-sm text-slate-600">
-                                  <p>Qty: {item.qty}</p>
-                                  <p className="mt-1">₵{(item.price * item.qty).toFixed(2)}</p>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                          {order.statusHistory?.length > 0 && (
-                            <div className="mt-4 border-t border-slate-200 pt-4">
-                              <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Status history</p>
-                              <div className="flex flex-wrap gap-2">
-                                {order.statusHistory.map((entry, index) => (
-                                  <span key={`${entry.status}-${index}`} className="rounded-full bg-white px-3 py-1 text-xs text-slate-600 ring-1 ring-slate-200">
-                                    {entry.status}
-                                  </span>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </>
-                )}
-              </div>
-            )}
-
-            {searchResults.length > 0 && (
-              <div className="rounded-[32px] border border-gray-200 bg-white p-6 shadow-sm">
-                <h2 className="text-xl font-serif font-semibold text-slate-950 mb-4">Track Result</h2>
-                <div className="space-y-4">
-                  {searchResults.map((order) => (
-                    <div key={order.id} className="rounded-3xl border border-slate-100 bg-slate-50 p-4">
-                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                        <div>
-                          <p className="text-xs uppercase tracking-[0.3em] text-amber-400">Order ID</p>
-                          <p className="text-lg font-semibold text-slate-950">{order.id}</p>
-                        </div>
-                        <div className="text-sm text-slate-600">
-                          <p>Status: {order.status}</p>
-                          <p>Date: {order.date}</p>
-                          <p>Total: ₵{order.total.toFixed(2)}</p>
-                        </div>
+                  <div className="mt-5 grid gap-2 border-t border-slate-100 pt-5 sm:grid-cols-2 lg:grid-cols-3">
+                    {order.items?.map((item) => (
+                      <div key={item.id} className="rounded-2xl bg-slate-50 p-3">
+                        <p className="text-sm font-semibold text-slate-900">{item.name}</p>
+                        <p className="mt-1 text-xs text-slate-500">Quantity {item.qty} · ₵{Number(item.lineTotal ?? item.price * item.qty).toFixed(2)}</p>
                       </div>
-                      <div className="mt-4 border-t border-slate-200 pt-4 space-y-3">
-                        {order.items.map((item) => (
-                          <div key={`${order.id}-${item.id}`} className="grid gap-2 sm:grid-cols-[1.2fr_0.8fr] items-center rounded-2xl bg-white p-3 border border-slate-200">
-                            <div>
-                              <p className="text-sm font-semibold text-slate-950">{item.name}</p>
-                              <p className="text-xs text-slate-500 mt-1">ID: {item.id}</p>
-                            </div>
-                            <div className="text-sm text-slate-600">
-                              <p>Qty: {item.qty}</p>
-                              <p className="mt-1">₵{(item.price * item.qty).toFixed(2)}</p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
-          <aside className="space-y-6">
-            <div className="rounded-[32px] border border-gray-200 bg-white p-6 shadow-sm">
-              <h2 className="text-xl font-serif font-semibold text-slate-950 mb-4">How it works</h2>
-              <div className="space-y-4 text-sm text-slate-600">
-                <p className="flex items-start gap-3"><FiClock className="mt-1 h-4 w-4 text-amber-400" /> Use the item name and order ID from your checkout confirmation.</p>
-                <p className="flex items-start gap-3"><FiSearch className="mt-1 h-4 w-4 text-amber-400" /> Search orders by exact or partial item name and order ID.</p>
-                <p className="flex items-start gap-3"><FiList className="mt-1 h-4 w-4 text-amber-400" /> Review status updates and item IDs for every purchase.</p>
-              </div>
+                    ))}
+                  </div>
+                </article>
+              ))}
             </div>
-          </aside>
-        </div>
+          )}
+        </section>
       </div>
-    </div>
+    </main>
   );
 };
 

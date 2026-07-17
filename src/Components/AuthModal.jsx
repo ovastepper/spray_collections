@@ -21,6 +21,13 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'signin', onSuccess }) => {
   });
   const [signinData, setSigninData] = useState({ email: '', password: '' });
 
+  const closeModal = () => {
+    setMode(initialMode);
+    setError('');
+    setSuccess('');
+    onClose();
+  };
+
   if (!isOpen || typeof document === 'undefined') {
     return null;
   }
@@ -46,7 +53,7 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'signin', onSuccess }) => {
       }
       setSuccess(result.message);
       if (onSuccess) onSuccess();
-      setTimeout(onClose, 500);
+      setTimeout(closeModal, 500);
       return;
     }
 
@@ -58,12 +65,12 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'signin', onSuccess }) => {
     }
     setSuccess(result.message);
     if (onSuccess) onSuccess();
-    setTimeout(onClose, 500);
+    setTimeout(closeModal, 500);
   };
 
   return createPortal(
-    <div onClick={onClose} className="fixed inset-0 z-[99999] flex items-center justify-center overflow-auto bg-slate-950/90 p-3 sm:p-4 backdrop-blur-sm">
-      <div onClick={(e) => e.stopPropagation()} className="mx-auto w-full max-w-[96vw] sm:max-w-3xl max-h-[calc(100vh-1.5rem)] overflow-hidden rounded-2xl sm:rounded-[32px] bg-white shadow-[0_32px_120px_rgba(15,23,42,0.18)] ring-1 ring-slate-200">
+    <div onClick={closeModal} className="fixed inset-0 z-[99999] flex items-center justify-center overflow-auto bg-slate-950/90 p-3 sm:p-4 backdrop-blur-sm">
+      <div onClick={(e) => e.stopPropagation()} className="mx-auto max-h-[calc(100vh-1.5rem)] w-full max-w-[96vw] overflow-hidden rounded-3xl bg-white shadow-[0_32px_120px_rgba(15,23,42,0.28)] ring-1 ring-white/10 sm:max-w-2xl">
         <div className="flex flex-col gap-2 sm:gap-3 border-b border-slate-200 px-4 sm:px-6 py-4 sm:py-5 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="text-2xl font-serif font-semibold text-slate-950 text-[1.1rem] sm:text-2xl">{currentUser ? 'Manage Account' : mode === 'signup' ? 'Create Account' : 'Sign In'}</h2>
@@ -72,7 +79,7 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'signin', onSuccess }) => {
           <div className="flex flex-wrap items-center gap-2">
             <button onClick={() => setMode('signin')} className={`rounded-full px-4 py-2 text-sm ${mode === 'signin' ? 'bg-amber-400 text-slate-950' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>Sign In</button>
             <button onClick={() => setMode('signup')} className={`rounded-full px-4 py-2 text-sm ${mode === 'signup' ? 'bg-amber-400 text-slate-950' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>Sign Up</button>
-            <button onClick={onClose} className="rounded-full border border-slate-200 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50">Close</button>
+            <button onClick={closeModal} className="rounded-full border border-slate-200 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50">Close</button>
           </div>
         </div>
 

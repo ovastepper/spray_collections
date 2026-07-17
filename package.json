@@ -7,17 +7,16 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
+    "test": "node --test src/context/authUtils.test.js",
     "preview": "vite preview",
     "firebase:deploy-rules": "firebase deploy --only firestore:rules,firestore:indexes"
   },
   "dependencies": {
     "axios": "^1.16.1",
-    "bootstrap": "^5.3.8",
     "firebase": "^12.13.0",
     "firebase-admin": "^14.1.0",
     "framer-motion": "^12.40.0",
     "react": "^19.2.5",
-    "react-bootstrap": "^2.10.10",
     "react-dom": "^19.2.5",
     "react-icons": "^5.6.0",
     "react-router-dom": "^7.15.1",

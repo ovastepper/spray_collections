@@ -25,7 +25,6 @@ const categoryFolders = [
   }
 ];
 
-const heroImageModules = import.meta.glob('../assets/landing/*.{jpg,jpeg,png}', { eager: true });
 const imageModules = import.meta.glob('../assets/categories/*/*.{jpg,jpeg,png}', { eager: true });
 
 const formatDisplayName = (fileName) => {
@@ -38,16 +37,6 @@ const formatDisplayName = (fileName) => {
     .map((word) => (word.length > 1 ? `${word[0].toUpperCase()}${word.slice(1).toLowerCase()}` : word.toUpperCase()))
     .join(' ');
 };
-
-const heroImageEntries = Object.entries(heroImageModules)
-  .map(([path, module]) => {
-    const fileName = path.split('/').pop();
-    return {
-      fileName,
-      image: module.default
-    };
-  })
-  .sort((a, b) => a.fileName.localeCompare(b.fileName, undefined, { numeric: true, sensitivity: 'base' }));
 
 const imageEntries = Object.entries(imageModules)
   .map(([path, module]) => {
@@ -67,7 +56,7 @@ const imageEntries = Object.entries(imageModules)
     return a.fileName.localeCompare(b.fileName, undefined, { numeric: true, sensitivity: 'base' });
   });
 
-const products = imageEntries.map((item, index) => {
+const allProducts = imageEntries.map((item, index) => {
   const category = categoryFolders.find((cat) => cat.folder === item.folder) || categoryFolders[0];
   const name = formatDisplayName(item.fileName);
   const price = 120 + ((index % 16) * 15);
@@ -88,19 +77,25 @@ const products = imageEntries.map((item, index) => {
   };
 });
 
-const featuredProducts = products.slice(0, 12);
+const curateProducts = () => {
+  const selected = [];
+  const usedNames = new Set();
 
-const heroSlides = heroImageEntries.map((item, index) => {
-  const name = formatDisplayName(item.fileName);
-  return {
-    id: `hero-${index}`,
-    name,
-    category: 'Featured Fragrance',
-    description: `Discover our premium ${name} collection.`,
-    buttonLabel: 'Discover Collection',
-    image: item.image,
-    link: '/menu'
-  };
-});
+  categoryFolders.forEach((category) => {
+    const candidates = allProducts.filter((product) => product.slug === category.slug);
+    const uniqueCandidates = candidates.filter((product) => !usedNames.has(product.name.toLowerCase()));
 
-export { categoryFolders, products, featuredProducts, heroSlides };
+    uniqueCandidates.slice(0, 8).forEach((product) => {
+      selected.push(product);
+      usedNames.add(product.name.toLowerCase());
+    });
+  });
+
+  return selected;
+};
+
+const products = curateProducts();
+const curatedProductIds = new Set(products.map((product) => product.id));
+const featuredProducts = products.slice(0, 8);
+
+export { allProducts, categoryFolders, curatedProductIds, products, featuredProducts };

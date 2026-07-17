@@ -34,7 +34,7 @@ const CategoryPage = () => {
           <p className="mt-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">{filteredProducts.length} fragrances</p>
         </div>
         {filteredProducts.length > 0 ? (
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-3 xl:grid-cols-4">
             {filteredProducts.map((product) => (
               <ProductCard key={product.id} product={product} onAddToCart={addToCart} />
             ))}

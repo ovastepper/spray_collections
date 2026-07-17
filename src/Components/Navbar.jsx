@@ -19,9 +19,9 @@ const Navbar = ({ onOpenCart }) => {
     <nav className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/95 shadow-sm backdrop-blur-xl">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-[72px] items-center justify-between gap-5">
-          <Link to="/" className="flex min-w-0 items-center gap-2.5" aria-label="Cianelle Luxe home">
-            <img src="/cianelle.svg.jpeg" alt="" className="h-11 w-11 rounded-full object-contain" />
-            <span className="hidden font-serif text-base tracking-[0.22em] text-slate-950 sm:block">CIANELLE_LUXE</span>
+          <Link to="/" className="flex min-w-0 items-center gap-2" aria-label="Cianelle Luxe home">
+            <img src="/cianelle.svg.jpeg" alt="" className="h-10 w-10 rounded-full object-contain sm:h-11 sm:w-11" />
+            <span className="font-serif text-sm tracking-[0.18em] text-slate-950 sm:text-base sm:tracking-[0.22em]">CIANELLE<span className="hidden sm:inline">_LUXE</span></span>
           </Link>
 
           <div className="hidden items-center md:flex">

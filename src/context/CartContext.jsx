@@ -15,7 +15,7 @@ import {
   setDoc,
   where
 } from 'firebase/firestore';
-import { products as initialProducts } from '../data/productData';
+import { allProducts, curatedProductIds, products as initialProducts } from '../data/productData';
 import { adminUids, auth, db } from '../config/firebase';
 import {
   archiveInventoryProduct,
@@ -37,7 +37,7 @@ const defaultCompanyInfo = {
   times: '8:00am GMT – 6:00pm'
 };
 
-const localProductsById = new Map(initialProducts.map((product) => [product.id, product]));
+const localProductsById = new Map(allProducts.map((product) => [product.id, product]));
 
 const loadStoredCart = () => {
   try {
@@ -133,6 +133,7 @@ export const CartProvider = ({ children }) => {
           image: localProductsById.get(productDoc.id)?.image || data.image || ''
         };
       })
+      .filter((product) => curatedProductIds.has(product.id))
       .filter((product) => !product.archived)
       .sort((a, b) => (a.sortIndex ?? 9999) - (b.sortIndex ?? 9999));
     setProducts(nextProducts);

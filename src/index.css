@@ -2,6 +2,11 @@
 
 :root {
   color-scheme: light;
+  font-synthesis: none;
+  --cianelle-ink: #101827;
+  --cianelle-cream: #f7f4ee;
+  --cianelle-gold: #d7a62c;
+  --cianelle-muted: #667085;
 }
 
 *,
@@ -26,12 +31,10 @@ body {
 
 /* Mobile-friendly touch targets */
 button,
-a,
 input,
 textarea,
 select {
   min-height: 44px;
-  min-width: 44px;
 }
 
 input,
@@ -61,6 +64,52 @@ canvas {
 body {
   @apply bg-white text-slate-900 antialiased;
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  margin: 0;
+  min-width: 320px;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+button {
+  border: 0;
+}
+
+.page-shell {
+  @apply min-h-screen bg-[#f7f4ee] text-slate-950;
+}
+
+.content-shell {
+  @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
+}
+
+.eyebrow {
+  @apply text-[10px] font-bold uppercase tracking-[0.32em] text-amber-700 sm:text-xs;
+}
+
+.surface-panel {
+  @apply rounded-3xl border border-slate-200/80 bg-white shadow-sm;
+}
+
+.primary-button {
+  @apply inline-flex min-h-11 items-center justify-center rounded-full bg-slate-950 px-6 py-3 text-[11px] font-bold uppercase tracking-[0.18em] text-white hover:bg-amber-400 hover:text-slate-950 disabled:cursor-not-allowed disabled:opacity-50;
+}
+
+.secondary-button {
+  @apply inline-flex min-h-11 items-center justify-center rounded-full border border-slate-300 bg-white px-6 py-3 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-800 hover:border-slate-950;
+}
+
+.field-control {
+  @apply w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-amber-500 focus:ring-2 focus:ring-amber-200;
 }
 
 ::selection {

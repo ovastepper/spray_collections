@@ -5,7 +5,7 @@ import HeroCarousel from '../Components/HeroCarousel';
 import CategoryHighlights from '../Components/CategoryHighlights';
 import FeaturedProducts from '../Components/FeaturedProducts';
 import MainFooter from '../Components/MainFooter';
-import editorialImage from '../assets/landing/elegant-perfume.jpg';
+import editorialImage from '../assets/landing/chanel.jpg';
 
 const assurances = [
   { icon: FiShield, title: 'Chosen with care', text: 'Quality fragrances selected for character, performance, and presence.' },
